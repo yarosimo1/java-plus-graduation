@@ -65,7 +65,7 @@ public class StatsClient {
             builder.queryParam("uris", uris.toArray());
         }
 
-        ViewStatsDto[] response = restTemplate.getForObject(builder.toUriString(), ViewStatsDto[].class);
+        ViewStatsDto[] response = restTemplate.getForObject(builder.build(false).toUri(), ViewStatsDto[].class);
         return response != null ? Arrays.asList(response) : List.of();
     }
 }

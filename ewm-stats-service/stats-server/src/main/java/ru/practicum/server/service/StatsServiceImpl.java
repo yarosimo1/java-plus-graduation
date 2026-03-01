@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import ru.practicum.server.controller.BadRequestException;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -35,6 +37,9 @@ public class StatsServiceImpl implements StatsService {
     @Override
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end,
                                        List<String> uris, boolean unique) {
+        if (end.isBefore(start)) {
+            throw new BadRequestException("end must not be before start");
+        }
         if (uris != null && !uris.isEmpty()) {
             if (unique) {
                 return hitRepository.findStatsUniqueByUris(start, end, uris);
