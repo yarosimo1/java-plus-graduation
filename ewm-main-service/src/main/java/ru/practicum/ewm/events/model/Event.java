@@ -38,12 +38,15 @@ public class Event {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean paid = false;
 
+    @Builder.Default
     @Column(name = "participant_limit", nullable = false)
     private Integer participantLimit = 0;
 
+    @Builder.Default
     @Column(name = "request_moderation", nullable = false)
     private Boolean requestModeration = true;
 
@@ -63,9 +66,11 @@ public class Event {
     @Embedded
     private Location location;
 
+    @Builder.Default
     @Column(nullable = false)
     private Integer confirmedRequests = 0;
 
+    @Builder.Default
     @Column(nullable = false)
     private Long views = 0L;
 }
