@@ -63,7 +63,7 @@
     </dependencies>
 
     <build>
-        <finalName>ewm-main-service</finalName>
+        <finalName>main-service</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
