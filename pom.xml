@@ -19,8 +19,6 @@
 	<artifactId>explore-with-me</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
-	<name>Explore With Me</name>
-
 	<packaging>pom</packaging>
 
 	<modules>
