@@ -1,7 +1,4 @@
 spring:
-  application:
-    name: stats-server
-
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/stats}
     username: ${SPRING_DATASOURCE_USERNAME:stats}
@@ -11,14 +8,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
-  jackson:
-    serialization:
-      write-dates-as-timestamps: false
-
 server:
-  port: 0
+  port: 9090

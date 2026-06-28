@@ -1,13 +1,12 @@
 spring:
   application:
     name: ewm-main-service
+
   config:
-    import: "optional:configserver:"
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+
   cloud:
     config:
-      discovery:
-        enabled: true
-        service-id: config-server
       fail-fast: false
 
 eureka:

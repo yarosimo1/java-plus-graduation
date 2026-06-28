@@ -1,7 +1,4 @@
 spring:
-  application:
-    name: ewm-main-service
-
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ewm}
     username: ${SPRING_DATASOURCE_USERNAME:ewm}
@@ -11,21 +8,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
-  jackson:
-    serialization:
-      write-dates-as-timestamps: false
-    date-format: yyyy-MM-dd HH:mm:ss
-    deserialization:
-      adjust-dates-to-context-time-zone: false
-
 server:
-  port: 0
-
-stats:
-  server:
-    url: http://stats-server
+  port: 8081

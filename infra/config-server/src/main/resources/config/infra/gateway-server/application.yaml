@@ -8,6 +8,7 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
+
       routes:
         - id: ewm-main-service
           uri: lb://ewm-main-service

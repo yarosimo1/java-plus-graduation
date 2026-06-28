@@ -1,8 +1,10 @@
 spring:
   application:
     name: config-server
+
   profiles:
     active: native
+
   cloud:
     config:
       server:
@@ -13,7 +15,7 @@ spring:
             - classpath:/config/infra/{application}
 
 server:
-  port: 0
+  port: ${SERVER_PORT:8888}
 
 eureka:
   client:
