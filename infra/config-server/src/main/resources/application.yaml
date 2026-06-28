@@ -7,14 +7,15 @@ spring:
     config:
       server:
         native:
-          searchLocations:
-            - classpath:config/core/{application}
-            - classpath:config/ewm-stats-service/{application}
+          search-locations:
+            - classpath:/config/core/{application}
+            - classpath:/config/ewm-stats-service/{application}
+            - classpath:/config/infra/{application}
 
 server:
-  port: 8888
+  port: 0
 
 eureka:
   client:
-    serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
