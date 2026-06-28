@@ -11,11 +11,11 @@ spring:
         native:
           search-locations:
             - classpath:/config/core/{application}
-            - classpath:/config/ewm-stats-service/{application}
+            - classpath:/config/stats-service/{application}
             - classpath:/config/infra/{application}
 
 server:
-  port: ${SERVER_PORT:8888}
+  port: ${SERVER_PORT:0}
 
 eureka:
   client:

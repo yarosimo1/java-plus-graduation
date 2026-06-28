@@ -32,6 +32,7 @@ services:
       - "8080:8080"
 
     environment:
+      CONFIG_SERVER_URL: http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
 
   stats-db:
@@ -52,7 +53,7 @@ services:
       retries: 10
 
   stats-server:
-    build: ewm-stats-service/stats-server
+    build: stats-service/stats-server
     image: stats-server
 
     depends_on:
@@ -87,7 +88,7 @@ services:
       retries: 10
 
   ewm-main-service:
-    build: core/ewm-main-service
+    build: core/main-service
     image: ewm-main-service
 
     depends_on:

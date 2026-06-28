@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/stats}
-    username: ${SPRING_DATASOURCE_USERNAME:stats}
-    password: ${SPRING_DATASOURCE_PASSWORD:stats}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ewm}
+    username: ${SPRING_DATASOURCE_USERNAME:ewm}
+    password: ${SPRING_DATASOURCE_PASSWORD:ewm}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -14,4 +14,4 @@ spring:
         format_sql: true
 
 server:
-  port: 9090
+  port: 0

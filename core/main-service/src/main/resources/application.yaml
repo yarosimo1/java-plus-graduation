@@ -8,6 +8,9 @@ spring:
   cloud:
     config:
       fail-fast: false
+      discovery:
+        enabled: true
+        service-id: config-server
 
 eureka:
   client:

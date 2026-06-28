@@ -10,8 +10,6 @@ import ru.practicum.client.StatsClient;
 @Configuration
 public class StatsClientConfig {
 
-    private String statsServerUrl;
-
     @Bean
     @LoadBalanced
     public RestTemplate statsRestTemplate() {
