@@ -25,7 +25,6 @@
 		<module>stats-service</module>
 		<module>infra</module>
 		<module>core</module>
-		<module>main-service</module>
 	</modules>
 
 	<properties>
