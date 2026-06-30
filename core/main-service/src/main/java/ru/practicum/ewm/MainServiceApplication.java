@@ -6,9 +6,9 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 @EnableDiscoveryClient
 @SpringBootApplication
-public class EwmMainServiceApp {
+public class MainServiceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(EwmMainServiceApp.class, args);
+        SpringApplication.run(MainServiceApplication.class, args);
     }
 }
