@@ -1,3 +1,6 @@
+server:
+  port: 8888
+
 spring:
   application:
     name: config-server
@@ -14,10 +17,17 @@ spring:
             - classpath:/config/stats-service/{application}
             - classpath:/config/infra/{application}
 
-server:
-  port: ${SERVER_PORT:0}
-
 eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,env
+
+logging:
+  level:
+    org.springframework.cloud.config.server: DEBUG
