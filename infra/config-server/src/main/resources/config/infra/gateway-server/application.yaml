@@ -2,6 +2,12 @@ server:
   port: 8080
 
 spring:
+  application:
+    name: gateway-server
+
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+
   cloud:
     gateway:
       discovery:
@@ -13,4 +19,19 @@ spring:
         - id: ewm-main-service
           uri: lb://ewm-main-service
           predicates:
-            - Path=/admin/**,/users/**,/events/**,/categories/**,/compilations/**,/comments/**
+            - Path=/admin/**,\
+              /users/**,\
+              /events/**,\
+              /categories/**,\
+              /compilations/**,\
+              /comments/**
+
+        - id: stats-service
+          uri: lb://stats-service
+          predicates:
+            - Path=/hit,/stats
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
