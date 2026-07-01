@@ -16,8 +16,8 @@ spring:
           lower-case-service-id: true
 
       routes:
-        - id: ewm-main-service
-          uri: lb://ewm-main-service
+        - id: main-service
+          uri: lb://main-service
           predicates:
             - Path=/admin/**,\
               /users/**,\
@@ -26,8 +26,8 @@ spring:
               /compilations/**,\
               /comments/**
 
-        - id: stats-service
-          uri: lb://stats-service
+        - id: stats-server
+          uri: lb://stats-server
           predicates:
             - Path=/hit,/stats
 
