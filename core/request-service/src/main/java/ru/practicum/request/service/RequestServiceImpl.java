@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewm.error.BadRequestException;
 import ru.practicum.ewm.events.dto.EventFullDto;
 import ru.practicum.ewm.events.model.EventState;
 import ru.practicum.ewm.request.model.StatusRequest;
@@ -32,6 +33,11 @@ public class RequestServiceImpl implements RequestService {
     @Override
     @Transactional
     public RequestDto addUserRequest(long userId, long eventId) {
+        log.info("userId={}, eventId={}", userId, eventId);
+        if (eventId <= 0) {
+            throw new BadRequestException("eventId must be greater than 0");
+        }
+
         log.info("Save request");
 
         adminClient.getUser(userId);

@@ -1,5 +1,6 @@
 package ru.practicum.ewm.events.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -29,6 +30,8 @@ public class NewEventDto {
     @JsonProperty("category")
     private Long categoryId;
 
+    @NotNull
+    @Valid
     private Location location;
 
     private Boolean paid = false;

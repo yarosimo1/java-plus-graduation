@@ -1,15 +1,15 @@
-package ru.practicum.eventsservice;
+package ru.practicum.ewm.user;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
-@EnableFeignClients(basePackages = "ru.practicum.events.client")
+@EnableFeignClients
 @EnableDiscoveryClient
-@SpringBootApplication(scanBasePackages = {"ru.practicum.events", "ru.practicum.ewm"})
-public class EventsServiceApplication {
+@SpringBootApplication
+public class AdminServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(EventsServiceApplication.class, args);
+        SpringApplication.run(AdminServiceApplication.class, args);
     }
 }
