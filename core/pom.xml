@@ -15,7 +15,7 @@
         <module>common-service</module>
         <module>events-service</module>
         <module>request-service</module>
-        <module>admin-service</module>
+        <module>user-service</module>
         <module>interactionapi</module>
     </modules>
 </project>
