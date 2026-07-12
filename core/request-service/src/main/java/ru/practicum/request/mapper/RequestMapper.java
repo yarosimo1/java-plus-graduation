@@ -2,7 +2,7 @@ package ru.practicum.request.mapper;
 
 import lombok.experimental.UtilityClass;
 import ru.practicum.ewm.request.dto.RequestDto;
-import ru.practicum.ewm.request.model.Request;
+import ru.practicum.request.model.Request;
 
 @UtilityClass
 public class RequestMapper {
@@ -12,8 +12,8 @@ public class RequestMapper {
             return null;
         }
         return RequestDto.builder()
-                .requester(request.getRequester().getId())
-                .event(request.getEvent().getId())
+                .requester(request.getRequesterId())
+                .event(request.getEventId())
                 .id(request.getId())
                 .status(request.getStatus())
                 .created(request.getCreated())

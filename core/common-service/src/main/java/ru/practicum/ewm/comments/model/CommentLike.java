@@ -2,7 +2,6 @@ package ru.practicum.ewm.comments.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import ru.practicum.ewm.user.model.User;
 
 @Entity
 @Getter
@@ -17,9 +16,8 @@ public class CommentLike {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "comment_id")

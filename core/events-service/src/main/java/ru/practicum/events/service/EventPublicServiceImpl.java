@@ -12,16 +12,16 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.StatsClient;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
+import ru.practicum.events.mapper.EventMapper;
+import ru.practicum.events.model.Event;
+import ru.practicum.events.model.EventSort;
+import ru.practicum.events.repository.EventRepository;
+import ru.practicum.events.repository.EventSpecification;
 import ru.practicum.ewm.error.BadRequestException;
 import ru.practicum.ewm.error.NotFoundException;
 import ru.practicum.ewm.events.dto.EventFullDto;
 import ru.practicum.ewm.events.dto.EventShortDto;
-import ru.practicum.ewm.events.mapper.EventMapper;
-import ru.practicum.ewm.events.model.Event;
-import ru.practicum.ewm.events.model.EventSort;
 import ru.practicum.ewm.events.model.EventState;
-import ru.practicum.ewm.events.repository.EventRepository;
-import ru.practicum.ewm.events.repository.EventSpecification;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -39,8 +39,8 @@ public class EventPublicServiceImpl implements EventPublicService {
 
     @Override
     public List<EventShortDto> getPublicEvents(String text, List<Long> categories, Boolean paid,
-            LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable,
-            EventSort sort, int from, int size, HttpServletRequest httpRequest) {
+                                               LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable,
+                                               EventSort sort, int from, int size, HttpServletRequest httpRequest) {
         int page = from / size;
 
         Pageable pageable = (sort == EventSort.EVENT_DATE)

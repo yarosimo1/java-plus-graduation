@@ -1,24 +1,87 @@
 services:
-  ewm-db:
+  admin-db:
     image: postgres:16.1
-    container_name: ewm-db
+    container_name: admin-db
 
     ports:
       - "5434:5432"
 
     environment:
-      POSTGRES_DB: ewm
-      POSTGRES_USER: ewm
-      POSTGRES_PASSWORD: ewm
+      POSTGRES_DB: admin_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ewm -d ewm"]
+      test: [ "CMD-SHELL", "pg_isready -U admin -d admin_db" ]
       interval: 5s
       timeout: 5s
       retries: 10
 
     volumes:
-      - ewm-db-data:/var/lib/postgresql/data
+      - admin-db-data:/var/lib/postgresql/data
+
+  events-db:
+    image: postgres:16.1
+    container_name: events-db
+
+    ports:
+      - "5435:5432"
+
+    environment:
+      POSTGRES_DB: events_db
+      POSTGRES_USER: events
+      POSTGRES_PASSWORD: events
+
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U events -d events_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    volumes:
+      - events-db-data:/var/lib/postgresql/data
+
+  common-db:
+    image: postgres:16.1
+    container_name: common-db
+
+    ports:
+      - "5436:5432"
+
+    environment:
+      POSTGRES_DB: common_db
+      POSTGRES_USER: common
+      POSTGRES_PASSWORD: common
+
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U common -d common_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    volumes:
+      - common-db-data:/var/lib/postgresql/data
+
+  request-db:
+    image: postgres:16.1
+    container_name: request-db
+
+    ports:
+      - "5437:5432"
+
+    environment:
+      POSTGRES_DB: request_db
+      POSTGRES_USER: request
+      POSTGRES_PASSWORD: request
+
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U request -d request_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    volumes:
+      - request-db-data:/var/lib/postgresql/data
 
   stats-db:
     image: postgres:16.1
@@ -33,7 +96,7 @@ services:
       POSTGRES_PASSWORD: stats
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U stats -d stats"]
+      test: [ "CMD-SHELL", "pg_isready -U stats -d stats" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -42,5 +105,8 @@ services:
       - stats-db-data:/var/lib/postgresql/data
 
 volumes:
-  ewm-db-data:
+  admin-db-data:
+  events-db-data:
+  common-db-data:
+  request-db-data:
   stats-db-data:

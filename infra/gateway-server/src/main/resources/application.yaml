@@ -41,8 +41,8 @@ spring:
           predicates:
             - Path=/users/*/requests/**,/users/*/events/*/requests/**
 
-        - id: additional-service
-          uri: lb://additional-service
+        - id: common-service
+          uri: lb://common-service
           predicates:
             - Path=/compilations/**,/comments/**,/admin/categories/**,/admin/compilations/**,/admin/comments/**
 

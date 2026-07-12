@@ -1,32 +1,30 @@
 package ru.practicum.ewm.compilation.mapper;
 
+import ru.practicum.ewm.compilation.model.Compilation;
 import lombok.experimental.UtilityClass;
 import ru.practicum.ewm.compilation.dto.CompilationDto;
-import ru.practicum.ewm.compilation.model.Compilation;
-import ru.practicum.ewm.events.mapper.EventMapper;
-import ru.practicum.ewm.events.model.Event;
+import ru.practicum.ewm.events.dto.EventShortDto;
 
+
+import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @UtilityClass
 public class CompilationMapper {
 
-    public CompilationDto toCompilationDto(Compilation compilation) {
+    public CompilationDto toCompilationDto(Compilation compilation, List<EventShortDto> events) {
         return CompilationDto.builder()
                 .id(compilation.getId())
-                .events(compilation.getEvents().stream()
-                        .map(EventMapper::toEventShortDto)
-                        .collect(Collectors.toList()))
                 .pinned(compilation.getPinned())
+                .events(events)
                 .title(compilation.getTitle())
                 .build();
     }
 
-    public static Compilation toCompilation(CompilationDto compilationDto, Set<Event> events) {
+    public static Compilation toCompilation(CompilationDto compilationDto, Set<Long> eventIds) {
         Compilation compilation = new Compilation();
-        compilation.setId(compilation.getId());
-        compilation.setEvents(events);
+        compilation.setId(compilationDto.getId());
+        compilation.setEventIds(eventIds);
         compilation.setPinned(compilationDto.getPinned() != null ? compilationDto.getPinned() : false);
         compilation.setTitle(compilationDto.getTitle());
 

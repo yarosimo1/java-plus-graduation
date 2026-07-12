@@ -1,8 +1,8 @@
 package ru.practicum.ewm.comments.service;
 
+import ru.practicum.ewm.comments.model.Sort;
 import ru.practicum.ewm.comments.dto.CommentDto;
 import ru.practicum.ewm.comments.dto.NewCommentDto;
-import ru.practicum.ewm.comments.model.Sort;
 
 import java.util.List;
 

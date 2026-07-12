@@ -5,7 +5,8 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.events.service.EventPrivateService;
+import ru.practicum.events.service.EventPrivateService;
+import ru.practicum.ewm.events.dto.*;
 import ru.practicum.ewm.request.dto.RequestDto;
 
 import java.util.List;

@@ -6,18 +6,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.ewm.categories.model.Category;
-import ru.practicum.ewm.categories.repository.CategoryRepository;
+import ru.practicum.events.client.CommonClient;
+import ru.practicum.ewm.categories.dto.CategoryDto;
 import ru.practicum.ewm.error.BadRequestException;
 import ru.practicum.ewm.error.ConflictException;
 import ru.practicum.ewm.error.NotFoundException;
 import ru.practicum.ewm.events.dto.EventFullDto;
 import ru.practicum.ewm.events.dto.UpdateEventAdminRequest;
-import ru.practicum.ewm.events.mapper.EventMapper;
-import ru.practicum.ewm.events.model.Event;
+import ru.practicum.events.mapper.EventMapper;
+import ru.practicum.events.model.Event;
 import ru.practicum.ewm.events.model.EventState;
-import ru.practicum.ewm.events.repository.EventRepository;
-import ru.practicum.ewm.events.repository.EventSpecification;
+import ru.practicum.events.repository.EventRepository;
+import ru.practicum.events.repository.EventSpecification;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,7 +27,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class EventAdminServiceImpl implements EventAdminService {
     private final EventRepository eventRepository;
-    private final CategoryRepository categoryRepository;
+    private final CommonClient commonClient;
 
     @Override
     public List<EventFullDto> getEventsAdmin(List<Long> users, List<String> states, List<Long> categories,
@@ -95,12 +95,12 @@ public class EventAdminServiceImpl implements EventAdminService {
         if (request.getParticipantLimit() != null) event.setParticipantLimit(request.getParticipantLimit());
         if (request.getRequestModeration() != null) event.setRequestModeration(request.getRequestModeration());
         if (request.getCategoryId() != null) {
-            Category category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new NotFoundException("Category with id=" + request.getCategoryId() + " was not found"));
-            event.setCategory(category);
+            CategoryDto category = commonClient.getCategory(request.getCategoryId());
+            event.setCategoryId(category.getId());
+            event.setCategoryName(category.getName());
         }
         if (request.getLocation() != null) {
-            ru.practicum.ewm.events.model.Location loc = new ru.practicum.ewm.events.model.Location();
+            ru.practicum.events.model.Location loc = new ru.practicum.events.model.Location();
             loc.setLat(request.getLocation().getLat());
             loc.setLon(request.getLocation().getLon());
             event.setLocation(loc);

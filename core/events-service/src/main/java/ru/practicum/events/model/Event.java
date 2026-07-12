@@ -2,9 +2,7 @@ package ru.practicum.events.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import ru.practicum.ewm.categories.model.Category;
 import ru.practicum.ewm.events.model.EventState;
-import ru.practicum.ewm.user.model.User;
 
 import java.time.LocalDateTime;
 
@@ -30,13 +28,17 @@ public class Event {
     @Column(nullable = false, length = 7000)
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "initiator_id", nullable = false)
-    private User initiator;
+    @Column(name = "initiator_id", nullable = false)
+    private Long initiatorId;
 
-    @ManyToOne
-    @JoinColumn(name = "category_id", nullable = false)
-    private Category category;
+    @Column(name = "initiator_name", length = 250)
+    private String initiatorName;
+
+    @Column(name = "category_id", nullable = false)
+    private Long categoryId;
+
+    @Column(name = "category_name", length = 50)
+    private String categoryName;
 
     @Builder.Default
     @Column(nullable = false)

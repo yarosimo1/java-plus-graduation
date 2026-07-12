@@ -1,7 +1,7 @@
 package ru.practicum.events.repository;
 
 import org.springframework.data.jpa.domain.Specification;
-import ru.practicum.ewm.events.model.Event;
+import ru.practicum.events.model.Event;
 import ru.practicum.ewm.events.model.EventState;
 
 import java.time.LocalDateTime;
@@ -18,11 +18,11 @@ public class EventSpecification {
     }
 
     public static Specification<Event> hasUsers(List<Long> users) {
-        return (root, query, cb) -> (users == null || users.isEmpty()) ? null : root.get("initiator").get("id").in(users);
+        return (root, query, cb) -> (users == null || users.isEmpty()) ? null : root.get("initiatorId").in(users);
     }
 
     public static Specification<Event> hasCategories(List<Long> categories) {
-        return (root, query, cb) -> (categories == null || categories.isEmpty()) ? null : root.get("category").get("id").in(categories);
+        return (root, query, cb) -> (categories == null || categories.isEmpty()) ? null : root.get("categoryId").in(categories);
     }
 
     public static Specification<Event> hasPaid(Boolean paid) {

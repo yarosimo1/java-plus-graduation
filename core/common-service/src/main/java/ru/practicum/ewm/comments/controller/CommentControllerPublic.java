@@ -1,18 +1,18 @@
 package ru.practicum.ewm.comments.controller;
 
+import ru.practicum.ewm.comments.model.Sort;
+import ru.practicum.ewm.comments.service.CommentService;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.comments.dto.CommentDto;
-import ru.practicum.ewm.comments.model.Sort;
-import ru.practicum.ewm.comments.service.CommentService;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/comments")
+@RequestMapping("/ru/practicum/ewm/comments")
 @RequiredArgsConstructor
 @Validated
 public class CommentControllerPublic {

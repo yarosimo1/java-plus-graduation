@@ -1,8 +1,8 @@
 package ru.practicum.ewm.comments.repository;
 
+import ru.practicum.ewm.comments.model.CommentLike;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import ru.practicum.ewm.comments.model.CommentLike;
 
 import java.util.List;
 import java.util.Optional;

@@ -1,23 +1,21 @@
 package ru.practicum.ewm.comments.mapper;
 
+import ru.practicum.ewm.comments.model.Comment;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import ru.practicum.ewm.comments.dto.CommentDto;
 import ru.practicum.ewm.comments.dto.NewCommentDto;
-import ru.practicum.ewm.comments.model.Comment;
 import ru.practicum.ewm.events.dto.EventShortDto;
-import ru.practicum.ewm.events.model.Event;
 import ru.practicum.ewm.user.dto.UserShortDto;
-import ru.practicum.ewm.user.model.User;
 
 import java.time.LocalDateTime;
 
 @UtilityClass
 public class CommentMapper {
-    public @NonNull Comment toComment(NewCommentDto newCommentDto, User author, Event event) {
+    public @NonNull Comment toComment(NewCommentDto newCommentDto, Long author, Long event) {
         return Comment.builder()
-                .author(author)
-                .event(event)
+                .authorId(author)
+                .eventId(event)
                 .text(newCommentDto.getText())
                 .created(LocalDateTime.now())
                 .build();

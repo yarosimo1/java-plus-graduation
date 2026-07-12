@@ -4,18 +4,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewm.events.dto.EventFullDto;
 import ru.practicum.ewm.events.model.EventState;
 import ru.practicum.ewm.request.model.StatusRequest;
 import ru.practicum.ewm.error.ConflictException;
 import ru.practicum.ewm.error.NotFoundException;
-import ru.practicum.ewm.events.model.Event;
-import ru.practicum.ewm.events.repository.EventRepository;
 import ru.practicum.ewm.request.dto.RequestDto;
-import ru.practicum.ewm.request.mapper.RequestMapper;
-import ru.practicum.ewm.request.model.Request;
-import ru.practicum.ewm.request.repository.RequestRepository;
-import ru.practicum.ewm.user.model.User;
-import ru.practicum.ewm.user.repository.UserRepository;
+import ru.practicum.request.client.AdminClient;
+import ru.practicum.request.client.EventsClient;
+import ru.practicum.request.mapper.RequestMapper;
+import ru.practicum.request.model.Request;
+import ru.practicum.request.repository.RequestRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,20 +26,18 @@ import java.util.Objects;
 @Transactional(readOnly = true)
 public class RequestServiceImpl implements RequestService {
     private final RequestRepository requestRepository;
-    private final UserRepository userRepository;
-    private final EventRepository eventRepository;
+    private final AdminClient adminClient;
+    private final EventsClient eventsClient;
 
     @Override
     @Transactional
     public RequestDto addUserRequest(long userId, long eventId) {
         log.info("Save request");
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(String.format("User with id: %s was not found", userId)));
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException(String.format("Event with id: %s was not found", eventId)));
+        adminClient.getUser(userId);
+        EventFullDto event = eventsClient.getEvent(eventId);
 
-        if (event.getInitiator().getId().equals(userId)) {
+        if (event.getInitiator() != null && event.getInitiator().getId().equals(userId)){
             throw new ConflictException("Initiator cannot request participation in own event");
         }
 
@@ -48,8 +45,7 @@ public class RequestServiceImpl implements RequestService {
             throw new ConflictException("Cannot participate in unpublished event");
         }
 
-        boolean exists = requestRepository
-                .existsByRequesterIdAndEventId(userId, eventId);
+        boolean exists = requestRepository.existsByRequesterIdAndEventId(userId, eventId);
 
         if (exists) {
             throw new ConflictException("Participation request already exists");
@@ -62,27 +58,22 @@ public class RequestServiceImpl implements RequestService {
             }
         }
 
-        StatusRequest statusRequest;
-
-        if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
-            statusRequest = StatusRequest.CONFIRMED;
-        } else {
-            statusRequest = StatusRequest.PENDING;
-        }
+        StatusRequest statusRequest = (!event.getRequestModeration() || event.getParticipantLimit() == 0)
+                ? StatusRequest.CONFIRMED
+                : StatusRequest.PENDING;
 
         Request request = Request.builder()
-                .requester(user)
+                .requesterId(userId)
                 .status(statusRequest)
                 .created(LocalDateTime.now())
-                .event(event)
+                .eventId(eventId)
                 .build();
 
         Request saved = Objects.requireNonNull(requestRepository.save(request));
         RequestDto result = RequestMapper.toRequestDto(saved);
 
         if (statusRequest == StatusRequest.CONFIRMED) {
-            event.setConfirmedRequests(event.getConfirmedRequests() + 1);
-            eventRepository.save(event);
+            eventsClient.updateConfirmedRequests(eventId, event.getConfirmedRequests() + 1);
         }
 
         return result;
@@ -94,7 +85,7 @@ public class RequestServiceImpl implements RequestService {
         Request request = requestRepository.findById(requestId).orElseThrow(
                 () -> new NotFoundException(String.format("Request with id: %s was not found", requestId)));
 
-        if (!request.getRequester().getId().equals(requesterId)) {
+        if (!request.getRequesterId().equals(requesterId)) {
             throw new NotFoundException(String.format("Requester with id: %s was not found", requesterId));
         }
 
@@ -102,9 +93,8 @@ public class RequestServiceImpl implements RequestService {
         request.setStatus(StatusRequest.CANCELED);
 
         if (wasConfirmed) {
-            Event event = request.getEvent();
-            event.setConfirmedRequests(Math.max(0, event.getConfirmedRequests() - 1));
-            eventRepository.save(event);
+            EventFullDto event = eventsClient.getEvent(request.getEventId());
+            eventsClient.updateConfirmedRequests(request.getEventId(), Math.max(0, event.getConfirmedRequests() - 1));
         }
 
         Request updated = requestRepository.save(request);
@@ -114,9 +104,7 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public List<RequestDto> getUserRequests(long requesterId) {
-        if (!userRepository.existsById(requesterId)) {
-            throw new NotFoundException(String.format("User with id: %s was not found", requesterId));
-        }
+        adminClient.getUser(requesterId);
 
         return requestRepository.findAllByRequesterId(requesterId).stream()
                 .map(RequestMapper::toRequestDto)

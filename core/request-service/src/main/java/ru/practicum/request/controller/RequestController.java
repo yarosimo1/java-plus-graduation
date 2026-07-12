@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.request.dto.RequestDto;
-import ru.practicum.ewm.request.service.RequestService;
+import ru.practicum.request.service.RequestService;
 
 import java.util.List;
 

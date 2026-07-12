@@ -6,10 +6,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.events.model.EventSort;
+import ru.practicum.events.service.EventPublicService;
 import ru.practicum.ewm.events.dto.EventFullDto;
 import ru.practicum.ewm.events.dto.EventShortDto;
-import ru.practicum.ewm.events.model.EventSort;
-import ru.practicum.ewm.events.service.EventPublicService;
 
 import java.time.LocalDateTime;
 import java.util.List;

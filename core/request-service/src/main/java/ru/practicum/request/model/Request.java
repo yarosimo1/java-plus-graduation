@@ -2,13 +2,13 @@ package ru.practicum.request.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import ru.practicum.ewm.events.model.Event;
-import ru.practicum.ewm.user.model.User;
+import ru.practicum.ewm.request.model.StatusRequest;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "userRequests")
+@Table(name = "user_requests",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"event_id", "requester_id"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,17 +20,17 @@ public class Request {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private LocalDateTime created;
 
-    @ManyToOne
-    @JoinColumn(name = "event_id")
-    private Event event;
+    @Column(name = "event_id", nullable = false)
+    private Long eventId;
 
-    @ManyToOne
-    @JoinColumn(name = "requester_id")
-    private User requester;
+    @Column(name = "requester_id", nullable = false)
+    private Long requesterId;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private StatusRequest status;
 }
 

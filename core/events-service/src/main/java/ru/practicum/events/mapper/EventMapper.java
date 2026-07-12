@@ -1,6 +1,7 @@
 package ru.practicum.events.mapper;
 
 import lombok.experimental.UtilityClass;
+import ru.practicum.events.model.Event;
 import ru.practicum.ewm.categories.dto.CategoryDto;
 import ru.practicum.ewm.error.BadRequestException;
 import ru.practicum.ewm.events.dto.Location;
@@ -8,7 +9,6 @@ import ru.practicum.ewm.events.model.EventState;
 import ru.practicum.ewm.events.dto.EventFullDto;
 import ru.practicum.ewm.events.dto.EventShortDto;
 import ru.practicum.ewm.events.dto.UpdateEventUserRequest;
-import ru.practicum.ewm.events.model.Event;
 import ru.practicum.ewm.user.dto.UserShortDto;
 
 @UtilityClass
@@ -19,20 +19,20 @@ public class EventMapper {
         dto.setId(event.getId());
         dto.setTitle(event.getTitle());
         dto.setAnnotation(event.getAnnotation());
-        if (event.getCategory() != null) {
+        if (event.getCategoryId() != null) {
             CategoryDto cat = new CategoryDto();
-            cat.setId(event.getCategory().getId());
-            cat.setName(event.getCategory().getName());
+            cat.setId(event.getCategoryId());
+            cat.setName(event.getCategoryName());
             dto.setCategory(cat);
         }
         dto.setPaid(event.getPaid());
         dto.setEventDate(event.getEventDate());
         dto.setConfirmedRequests(event.getConfirmedRequests());
         dto.setViews(event.getViews());
-        if (event.getInitiator() != null) {
+        if (event.getInitiatorId() != null) {
             UserShortDto initiator = new UserShortDto();
-            initiator.setId(event.getInitiator().getId());
-            initiator.setName(event.getInitiator().getName());
+            initiator.setId(event.getInitiatorId());
+            initiator.setName(event.getInitiatorName());
             dto.setInitiator(initiator);
         }
         return dto;
@@ -44,10 +44,10 @@ public class EventMapper {
         dto.setTitle(event.getTitle());
         dto.setAnnotation(event.getAnnotation());
         dto.setDescription(event.getDescription());
-        if (event.getCategory() != null) {
+        if (event.getCategoryId() != null) {
             CategoryDto cat = new CategoryDto();
-            cat.setId(event.getCategory().getId());
-            cat.setName(event.getCategory().getName());
+            cat.setId(event.getCategoryId());
+            cat.setName(event.getCategoryName());
             dto.setCategory(cat);
         }
         dto.setPaid(event.getPaid());
@@ -59,10 +59,10 @@ public class EventMapper {
         dto.setState(event.getState());
         dto.setConfirmedRequests(event.getConfirmedRequests());
         dto.setViews(event.getViews());
-        if (event.getInitiator() != null) {
+        if (event.getInitiatorId() != null) {
             UserShortDto initiator = new UserShortDto();
-            initiator.setId(event.getInitiator().getId());
-            initiator.setName(event.getInitiator().getName());
+            initiator.setId(event.getInitiatorId());
+            initiator.setName(event.getInitiatorName());
             dto.setInitiator(initiator);
         }
         if (event.getLocation() != null) {

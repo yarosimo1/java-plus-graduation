@@ -1,5 +1,7 @@
 package ru.practicum.ewm.comments.controller;
 
+import ru.practicum.ewm.comments.model.Sort;
+import ru.practicum.ewm.comments.service.CommentService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -9,8 +11,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.comments.dto.CommentDto;
 import ru.practicum.ewm.comments.dto.NewCommentDto;
-import ru.practicum.ewm.comments.model.Sort;
-import ru.practicum.ewm.comments.service.CommentService;
 
 import java.util.List;
 

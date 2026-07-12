@@ -5,14 +5,14 @@ import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.categories.dto.CategoryDto;
 import ru.practicum.ewm.categories.service.CategoryService;
+import ru.practicum.ewm.categories.dto.CategoryDto;
 
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/categories")
+@RequestMapping("/ru/practicum/ewm/categories")
 @Validated
 public class CategoryControllerPublic {
     private final CategoryService categoryService;
