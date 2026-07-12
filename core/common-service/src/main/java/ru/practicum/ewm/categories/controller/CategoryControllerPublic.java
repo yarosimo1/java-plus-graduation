@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/ru/practicum/ewm/categories")
+@RequestMapping("/categories")
 @Validated
 public class CategoryControllerPublic {
     private final CategoryService categoryService;

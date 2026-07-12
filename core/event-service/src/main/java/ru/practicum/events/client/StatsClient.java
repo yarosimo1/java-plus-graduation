@@ -13,7 +13,7 @@ import ru.practicum.dto.ViewStatsDto;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@FeignClient(name = "ewm-stats-service", path = "/internal/stats")
+@FeignClient(name = "stats-server", path = "/internal/stats")
 public interface StatsClient {
 
     @PostMapping("/hit")

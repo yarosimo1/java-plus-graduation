@@ -12,7 +12,7 @@ import ru.practicum.ewm.comments.dto.CommentDto;
 import java.util.List;
 
 @RestController
-@RequestMapping("/ru/practicum/ewm/comments")
+@RequestMapping("/comments")
 @RequiredArgsConstructor
 @Validated
 public class CommentControllerPublic {
