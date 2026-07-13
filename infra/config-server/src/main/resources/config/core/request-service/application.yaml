@@ -1,4 +1,9 @@
 spring:
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5437/request_db}
     username: ${SPRING_DATASOURCE_USERNAME:request}

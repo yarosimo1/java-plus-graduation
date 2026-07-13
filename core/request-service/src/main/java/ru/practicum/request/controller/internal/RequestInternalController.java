@@ -22,8 +22,8 @@ public class RequestInternalController {
     private final RequestRepository requestRepository;
 
     @GetMapping("/events/{eventId}/requests")
-    public List<RequestDto> getEventRequests(@PathVariable Long eventId,
-                                             @RequestParam(required = false) List<Long> ids) {
+    public List<RequestDto> getEventRequests(@PathVariable("eventId") Long eventId,
+                                             @RequestParam(value = "ids", required = false) List<Long> ids) {
         return (ids == null || ids.isEmpty()
                 ? requestRepository.findAllByEventId(eventId)
                 : requestRepository.findAllByIdInAndEventId(ids, eventId)).stream()
@@ -32,12 +32,14 @@ public class RequestInternalController {
     }
 
     @GetMapping("/events/{eventId}/requests/count")
-    public long countEventRequests(@PathVariable Long eventId, @RequestParam StatusRequest status) {
+    public long countEventRequests(@PathVariable("eventId") Long eventId,
+                                   @RequestParam("status") StatusRequest status) {
         return requestRepository.countByEventIdAndStatus(eventId, status);
     }
 
     @PatchMapping("/requests/status")
-    public List<RequestDto> updateStatuses(@RequestBody List<Long> requestIds, @RequestParam StatusRequest status) {
+    public List<RequestDto> updateStatuses(@RequestBody List<Long> requestIds,
+                                           @RequestParam("status") StatusRequest status) {
         return requestRepository.findAllById(requestIds).stream()
                 .peek(request -> request.setStatus(status))
                 .map(requestRepository::save)

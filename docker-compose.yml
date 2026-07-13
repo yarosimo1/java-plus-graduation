@@ -41,27 +41,6 @@ services:
     volumes:
       - events-db-data:/var/lib/postgresql/data
 
-  common-db:
-    image: postgres:16.1
-    container_name: common-db
-
-    ports:
-      - "5436:5432"
-
-    environment:
-      POSTGRES_DB: common_db
-      POSTGRES_USER: common
-      POSTGRES_PASSWORD: common
-
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U common -d common_db" ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-    volumes:
-      - common-db-data:/var/lib/postgresql/data
-
   request-db:
     image: postgres:16.1
     container_name: request-db
@@ -107,6 +86,5 @@ services:
 volumes:
   admin-db-data:
   events-db-data:
-  common-db-data:
   request-db-data:
   stats-db-data:

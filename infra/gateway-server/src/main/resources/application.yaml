@@ -31,20 +31,15 @@ spring:
           predicates:
             - Path=/admin/users/**
 
-        - id: events-service
-          uri: lb://events-service
-          predicates:
-            - Path=/events/**,/users/*/events/**,/admin/events/**
-
         - id: request-service
           uri: lb://request-service
           predicates:
-            - Path=/users/*/requests/**,/users/*/events/*/requests/**
+            - Path=/users/*/requests/**
 
-        - id: common-service
-          uri: lb://common-service
+        - id: events-service
+          uri: lb://events-service
           predicates:
-            - Path=/categories/**,/compilations/**,/comments/**,/users/*/comments/**,/admin/categories/**,/admin/compilations/**,/admin/comments/**
+            - Path=/events/**,/users/*/events/**,/users/*/comments/**,/admin/events/**,/categories/**,/compilations/**,/comments/**,/admin/categories/**,/admin/compilations/**,/admin/comments/**
 
         - id: main-service
           uri: lb://main-service
