@@ -41,11 +41,6 @@ spring:
           predicates:
             - Path=/events/**,/users/*/events/**,/users/*/comments/**,/admin/events/**,/categories/**,/compilations/**,/comments/**,/admin/categories/**,/admin/compilations/**,/admin/comments/**
 
-        - id: main-service
-          uri: lb://main-service
-          predicates:
-            - Path=/admin/**,/users/**,/events/**,/categories/**,/compilations/**,/comments/**
-
         - id: stats-server
           uri: lb://stats-server
           predicates:
