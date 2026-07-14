@@ -27,6 +27,9 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -36,6 +39,7 @@ import java.util.stream.Collectors;
 public class EventPublicServiceImpl implements EventPublicService {
     private final EventRepository eventRepository;
     private final StatsClient statsClient;
+    private final ConcurrentMap<Long, Set<String>> localUniqueViews = new ConcurrentHashMap<>();
 
     @Override
     public List<EventShortDto> getPublicEvents(String text, List<Long> categories, Boolean paid,
@@ -64,14 +68,14 @@ public class EventPublicServiceImpl implements EventPublicService {
 
         List<Event> events = eventRepository.findAll(spec, pageable).getContent();
 
-        saveHit(httpRequest);
+        saveHit(httpRequest, getClientIp(httpRequest));
 
         Map<Long, Long> viewsMap = getViewsMap(events);
 
         List<EventShortDto> result = events.stream()
                 .map(e -> {
                     EventShortDto dto = EventMapper.toEventShortDto(e);
-                    dto.setViews(viewsMap.getOrDefault(e.getId(), 0L));
+                    dto.setViews(viewsMap.getOrDefault(e.getId(), e.getViews() == null ? 0L : e.getViews()));
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -84,6 +88,7 @@ public class EventPublicServiceImpl implements EventPublicService {
     }
 
     @Override
+    @Transactional
     public EventFullDto getPublicEventById(Long eventId, HttpServletRequest httpRequest) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
@@ -92,38 +97,67 @@ public class EventPublicServiceImpl implements EventPublicService {
             throw new NotFoundException("Event with id=" + eventId + " was not found");
         }
 
-        saveHit(httpRequest);
+        String clientIp = getClientIp(httpRequest);
+        saveHit(httpRequest, clientIp);
 
-        long views = 0L;
+        long views = registerLocalUniqueView(event, clientIp);
+
         try {
             List<ViewStatsDto> stats = statsClient.getStats(
-                    event.getPublishedOn(),
+                    LocalDateTime.now().minusYears(100),
                     LocalDateTime.now().plusDays(3),
                     List.of("/events/" + eventId),
                     true);
-            views = stats.isEmpty() ? 0L : stats.getFirst().getHits();
+
+            if (!stats.isEmpty()) {
+                views = Math.max(views, stats.getFirst().getHits());
+                event.setViews(views);
+            }
         } catch (Exception e) {
             log.warn("Failed to fetch view stats for event id={}: {}", eventId, e.getMessage(), e);
         }
+
+        eventRepository.save(event);
 
         EventFullDto dto = EventMapper.toEventFullDto(event);
         dto.setViews(views);
         return dto;
     }
 
-    private void saveHit(HttpServletRequest request) {
+    private long registerLocalUniqueView(Event event, String clientIp) {
+        Set<String> eventIps = localUniqueViews.computeIfAbsent(event.getId(), id -> ConcurrentHashMap.newKeySet());
+        eventIps.add(clientIp);
+        long views = eventIps.size();
+        event.setViews(views);
+        return views;
+    }
+
+
+    private void saveHit(HttpServletRequest request, String clientIp) {
         try {
             statsClient.saveHit(new EndpointHitDto(
                     null,
                     "ewm-main-service",
                     request.getRequestURI(),
-                    request.getRemoteAddr(),
+                    clientIp,
                     LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
             ));
         } catch (Exception e) {
-            log.warn("Failed to save hit for uri={} ip={}: {}", request.getRequestURI(), request.getRemoteAddr(),
+            log.warn("Failed to save hit for uri={} ip={}: {}", request.getRequestURI(), getClientIp(request),
                     e.getMessage(), e);
         }
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
+        }
+        String realIp = request.getHeader("X-Real-IP");
+        if (realIp != null && !realIp.isBlank()) {
+            return realIp.trim();
+        }
+        return request.getRemoteAddr();
     }
 
     private Map<Long, Long> getViewsMap(List<Event> events) {

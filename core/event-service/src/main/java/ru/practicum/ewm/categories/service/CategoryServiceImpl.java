@@ -2,7 +2,6 @@ package ru.practicum.ewm.categories.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.categories.mapper.CategoryMapper;
@@ -10,12 +9,14 @@ import ru.practicum.ewm.categories.model.Category;
 import ru.practicum.ewm.categories.repository.CategoryRepository;
 import ru.practicum.ewm.categories.dto.CategoryDto;
 import ru.practicum.ewm.categories.dto.NewCategoryDto;
-import ru.practicum.ewm.common.OffsetPageRequest;
 import ru.practicum.ewm.error.ConflictException;
 import ru.practicum.ewm.error.NotFoundException;
+import ru.practicum.ewm.events.repository.EventRepository;
 
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
+    private final EventRepository eventRepository;
 
     @Override
     @Transactional
@@ -54,11 +56,22 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public List<CategoryDto> getAll(Integer from, Integer size) {
         log.info("Получаем категории: from={}, size={}", from, size);
-        Pageable pageable = new OffsetPageRequest(from, size);
-        return categoryRepository.findAll(pageable)
-                .stream()
+        Map<Long, CategoryDto> categories = new LinkedHashMap<>();
+        categoryRepository.findAll().stream()
                 .map(CategoryMapper::toCategoryDto)
-                .collect(Collectors.toList());
+                .forEach(category -> categories.put(category.getId(), category));
+
+        eventRepository.findDistinctCategorySnapshots().forEach(snapshot -> {
+            Long id = (Long) snapshot[0];
+            String name = (String) snapshot[1];
+            categories.putIfAbsent(id, new CategoryDto(id, name));
+        });
+
+        return categories.values().stream()
+                .sorted(Comparator.comparing(CategoryDto::getId).reversed())
+                .skip(from)
+                .limit(size)
+                .toList();
     }
 
     @Override
@@ -67,6 +80,9 @@ public class CategoryServiceImpl implements CategoryService {
         log.info("Удаляем категорию с id={}", id);
         if (!categoryRepository.existsById(id)) {
             throw new NotFoundException(String.format("Категория с id: %s не найдена", id));
+        }
+        if (eventRepository.existsByCategoryId(id)) {
+            throw new ConflictException(String.format("Категория с id: %s используется в событиях", id));
         }
         categoryRepository.deleteById(id);
     }

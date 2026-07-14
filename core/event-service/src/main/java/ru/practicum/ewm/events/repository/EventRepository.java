@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import ru.practicum.ewm.events.model.Event;
 
 import java.util.List;
@@ -15,4 +16,10 @@ public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecific
     Optional<Event> findByIdAndInitiatorId(Long eventId, Long userId);
 
     List<Event> findAllByIdIn(List<Long> ids);
+
+    boolean existsByCategoryId(Long categoryId);
+
+    @Query("SELECT DISTINCT e.categoryId, e.categoryName FROM Event e " +
+            "WHERE e.categoryId IS NOT NULL AND e.categoryName IS NOT NULL")
+    List<Object[]> findDistinctCategorySnapshots();
 }
