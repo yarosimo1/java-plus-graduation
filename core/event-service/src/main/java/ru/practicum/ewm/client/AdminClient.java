@@ -8,7 +8,7 @@ import ru.practicum.ewm.user.dto.UserDto;
 
 import java.util.List;
 
-@FeignClient(name = "admin-service", path = "/internal/users")
+@FeignClient(name = "user-service", path = "/internal/users")
 public interface AdminClient {
     @GetMapping("/{userId}")
     UserDto getUser(@PathVariable Long userId);
