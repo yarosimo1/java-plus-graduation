@@ -8,8 +8,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableFeignClients
 @EnableDiscoveryClient
 @SpringBootApplication(scanBasePackages = {"ru.practicum.ewm.user", "ru.practicum.ewm.error"})
-public class AdminServiceApplication {
+public class UserServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(AdminServiceApplication.class, args);
+        SpringApplication.run(UserServiceApplication.class, args);
     }
 }

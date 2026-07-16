@@ -8,8 +8,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableFeignClients(basePackages = "ru.practicum.ewm.client")
 @EnableDiscoveryClient
 @SpringBootApplication(scanBasePackages = {"ru.practicum.ewm", "ru.practicum.ewm"})
-public class EventsServiceApplication {
+public class EventServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(EventsServiceApplication.class, args);
+        SpringApplication.run(EventServiceApplication.class, args);
     }
 }

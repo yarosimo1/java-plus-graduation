@@ -26,8 +26,8 @@ spring:
           lower-case-service-id: true
 
       routes:
-        - id: admin-service
-          uri: lb://admin-service
+        - id: user-service
+          uri: lb://user-service
           predicates:
             - Path=/admin/users/**
 
@@ -36,8 +36,8 @@ spring:
           predicates:
             - Path=/users/*/requests/**
 
-        - id: events-service
-          uri: lb://events-service
+        - id: event-service
+          uri: lb://event-service
           predicates:
             - Path=/events/**,/users/*/events/**,/users/*/comments/**,/admin/events/**,/categories/**,/compilations/**,/comments/**,/admin/categories/**,/admin/compilations/**,/admin/comments/**
 
