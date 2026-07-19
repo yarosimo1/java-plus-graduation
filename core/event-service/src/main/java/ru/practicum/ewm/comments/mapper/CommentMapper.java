@@ -1,0 +1,43 @@
+package ru.practicum.ewm.comments.mapper;
+
+import lombok.NonNull;
+import lombok.experimental.UtilityClass;
+import ru.practicum.ewm.comments.dto.CommentDto;
+import ru.practicum.ewm.comments.dto.NewCommentDto;
+import ru.practicum.ewm.comments.model.Comment;
+import ru.practicum.ewm.events.dto.EventShortDto;
+import ru.practicum.ewm.user.dto.UserDto;
+import ru.practicum.ewm.user.dto.UserShortDto;
+
+import java.time.LocalDateTime;
+
+@UtilityClass
+public class CommentMapper {
+    public @NonNull Comment toComment(NewCommentDto newCommentDto, Long author, Long event) {
+        return Comment.builder()
+                .authorId(author)
+                .eventId(event)
+                .text(newCommentDto.getText())
+                .created(LocalDateTime.now())
+                .build();
+    }
+
+    public @NonNull CommentDto toCommentDto(Comment comment, UserShortDto author, EventShortDto event, long likesCount) {
+        return CommentDto.builder()
+                .id(comment.getId())
+                .text(comment.getText())
+                .author(author)
+                .event(event)
+                .created(comment.getCreated())
+                .edited(comment.getEdited())
+                .likesCount(likesCount)
+                .build();
+    }
+
+    public UserShortDto toShort(UserDto user) {
+        UserShortDto dto = new UserShortDto();
+        dto.setId(user.getId());
+        dto.setName(user.getName());
+        return dto;
+    }
+}

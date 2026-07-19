@@ -1,4 +1,4 @@
-package ru.practicum.server;
+package ru.practicum.ewm.user;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -7,10 +7,9 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @EnableFeignClients
 @EnableDiscoveryClient
-@SpringBootApplication
-public class StatsServerApp {
-
+@SpringBootApplication(scanBasePackages = {"ru.practicum.ewm.user", "ru.practicum.ewm.error"})
+public class UserServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(StatsServerApp.class, args);
+        SpringApplication.run(UserServiceApplication.class, args);
     }
 }

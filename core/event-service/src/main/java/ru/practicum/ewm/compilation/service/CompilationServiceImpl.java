@@ -1,0 +1,120 @@
+package ru.practicum.ewm.compilation.service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewm.common.OffsetPageRequest;
+import ru.practicum.ewm.compilation.dto.CompilationDto;
+import ru.practicum.ewm.compilation.dto.NewCompilationDto;
+import ru.practicum.ewm.compilation.dto.UpdateCompilationRequest;
+import ru.practicum.ewm.compilation.mapper.CompilationMapper;
+import ru.practicum.ewm.compilation.model.Compilation;
+import ru.practicum.ewm.compilation.repository.CompilationRepository;
+import ru.practicum.ewm.error.NotFoundException;
+import ru.practicum.ewm.events.dto.EventShortDto;
+import ru.practicum.ewm.events.mapper.EventMapper;
+import ru.practicum.ewm.events.model.Event;
+import ru.practicum.ewm.events.repository.EventRepository;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class CompilationServiceImpl implements CompilationService {
+    private final CompilationRepository compilationRepository;
+    private final EventRepository eventRepository;
+
+    @Override
+    @Transactional
+    public CompilationDto saveCompilation(NewCompilationDto dto) {
+        log.info("Saving compilation: title={}", dto.getTitle());
+        Set<Long> eventIds = resolveEventIds(dto.getEvents());
+        Compilation compilation = new Compilation();
+        compilation.setEventIds(eventIds);
+        compilation.setPinned(dto.getPinned() != null ? dto.getPinned() : false);
+        compilation.setTitle(dto.getTitle());
+        return toDto(compilationRepository.save(compilation));
+    }
+
+    @Override
+    @Transactional
+    public void deleteCompilation(long compId) {
+        log.info("Deleting compilation id={}", compId);
+        if (!compilationRepository.existsById(compId)) {
+            throw new NotFoundException("Compilation with id=" + compId + " was not found");
+        }
+        compilationRepository.deleteById(compId);
+    }
+
+    @Override
+    @Transactional
+    public CompilationDto updateCompilation(long compId, UpdateCompilationRequest request) {
+        log.info("Updating compilation id={}", compId);
+        Compilation compilation = getOrThrow(compId);
+
+        if (request.getEvents() != null) {
+            compilation.setEventIds(resolveEventIds(request.getEvents()));
+        }
+        if (request.getPinned() != null) {
+            compilation.setPinned(request.getPinned());
+        }
+        if (request.getTitle() != null) {
+            compilation.setTitle(request.getTitle());
+        }
+        return toDto(compilationRepository.save(compilation));
+    }
+
+    @Override
+    public List<CompilationDto> getCompilations(Boolean pinned, int from, int size) {
+        log.info("Getting compilations: pinned={}, from={}, size={}", pinned, from, size);
+        Pageable pageable = new OffsetPageRequest(from, size);
+
+        List<Compilation> compilations = pinned != null ?
+                compilationRepository.findWithEventsByPinned(pinned, pageable) :
+                compilationRepository.findAllWithEvents(pageable);
+        return compilations.stream().map(this::toDto).toList();
+    }
+
+    @Override
+    public CompilationDto getCompilation(long compId) {
+        log.info("Getting compilation id={}", compId);
+        return toDto(getOrThrow(compId));
+    }
+
+    private Compilation getOrThrow(long compId) {
+        return compilationRepository.findById(compId)
+                .orElseThrow(() -> new NotFoundException("Compilation with id=" + compId + " was not found"));
+    }
+
+    private Set<Long> resolveEventIds(Set<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return new HashSet<>();
+        }
+
+        List<Long> foundIds = eventRepository.findAllById(ids).stream()
+                .map(Event::getId)
+                .toList();
+
+        if (foundIds.size() != ids.size()) {
+            throw new NotFoundException("One or more events were not found");
+        }
+
+        return new HashSet<>(ids);
+    }
+
+    private CompilationDto toDto(Compilation compilation) {
+        List<EventShortDto> events = compilation.getEventIds().isEmpty()
+                ? List.of()
+                : eventRepository.findAllById(compilation.getEventIds()).stream()
+                  .map(EventMapper::toEventShortDto)
+                  .toList();
+
+        return CompilationMapper.toCompilationDto(compilation, events);
+    }
+}

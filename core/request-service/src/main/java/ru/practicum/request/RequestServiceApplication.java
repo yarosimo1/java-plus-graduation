@@ -1,16 +1,15 @@
-package ru.practicum.server;
+package ru.practicum.request;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
-@EnableFeignClients
+@EnableFeignClients(basePackages = "ru.practicum.request.client")
 @EnableDiscoveryClient
-@SpringBootApplication
-public class StatsServerApp {
-
+@SpringBootApplication(scanBasePackages = {"ru.practicum.request", "ru.practicum.ewm.error", "ru.practicum.ewm.common"})
+public class RequestServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(StatsServerApp.class, args);
+        SpringApplication.run(RequestServiceApplication.class, args);
     }
 }
