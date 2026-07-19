@@ -7,23 +7,22 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.client.AdminClient;
+import ru.practicum.ewm.comments.dto.CommentDto;
+import ru.practicum.ewm.comments.dto.NewCommentDto;
 import ru.practicum.ewm.comments.mapper.CommentMapper;
 import ru.practicum.ewm.comments.model.Comment;
 import ru.practicum.ewm.comments.model.CommentLike;
 import ru.practicum.ewm.comments.model.Sort;
 import ru.practicum.ewm.comments.repository.CommentLikeRepository;
 import ru.practicum.ewm.comments.repository.CommentRepository;
-import ru.practicum.ewm.events.mapper.EventMapper;
-import ru.practicum.ewm.events.repository.EventRepository;
-import ru.practicum.ewm.comments.dto.CommentDto;
-import ru.practicum.ewm.comments.dto.NewCommentDto;
 import ru.practicum.ewm.common.OffsetPageRequest;
 import ru.practicum.ewm.error.ConflictException;
 import ru.practicum.ewm.error.NotFoundException;
 import ru.practicum.ewm.events.dto.EventFullDto;
 import ru.practicum.ewm.events.dto.EventShortDto;
+import ru.practicum.ewm.events.mapper.EventMapper;
 import ru.practicum.ewm.events.model.EventState;
-import ru.practicum.ewm.user.dto.UserDto;
+import ru.practicum.ewm.events.repository.EventRepository;
 import ru.practicum.ewm.user.dto.UserShortDto;
 
 import java.time.LocalDateTime;
@@ -45,7 +44,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public CommentDto createComment(Long userId, Long eventId, NewCommentDto newCommentDto) {
-        UserShortDto author = toShort(adminClient.getUser(userId));
+        UserShortDto author = CommentMapper.toShort(adminClient.getUser(userId));
         EventFullDto event = getEvent(eventId);
 
         if (event.getState() != EventState.PUBLISHED) {
@@ -55,12 +54,12 @@ public class CommentServiceImpl implements CommentService {
         Comment comment = commentRepository.save(CommentMapper.toComment(newCommentDto, userId, eventId));
         log.debug("Comment created with id: {}", comment.getId());
 
-        return CommentMapper.toCommentDto(comment, author, toShort(event), 0L);
+        return CommentMapper.toCommentDto(comment, author, EventMapper.toEventShortDto(event), 0L);
     }
 
     @Override
     public CommentDto updateComment(Long userId, Long commentId, NewCommentDto newCommentDto) {
-        UserShortDto author = toShort(adminClient.getUser(userId));
+        UserShortDto author = CommentMapper.toShort(adminClient.getUser(userId));
         Comment comment = checkAndGetComment(commentId);
         log.info("Updating comment for user: {}, commentId: {}", userId, commentId);
 
@@ -72,16 +71,14 @@ public class CommentServiceImpl implements CommentService {
         comment.setEdited(LocalDateTime.now());
         long countLikes = commentLikeRepository.countByCommentId(comment.getId());
 
-        return CommentMapper.toCommentDto(comment,
-                author,
-                toShort(getEvent(comment.getEventId())), countLikes);
+        return CommentMapper.toCommentDto(comment, author, EventMapper.toEventShortDto(getEvent(comment.getEventId())), countLikes);
 
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<CommentDto> getCommentsByAuthorId(Long userId, Integer from, Integer size, Sort sort) {
-        UserShortDto userShort = toShort(adminClient.getUser(userId));
+        UserShortDto userShort = CommentMapper.toShort(adminClient.getUser(userId));
 
         Pageable pageable = new OffsetPageRequest(from, size);
 
@@ -96,7 +93,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional(readOnly = true)
     public List<CommentDto> getCommentsByEventId(Long eventId, Integer from, Integer size, Sort sort) {
-        EventShortDto eventShort = toShort(getEvent(eventId));
+        EventShortDto eventShort = EventMapper.toEventShortDto(getEvent(eventId));
 
         Pageable pageable = new OffsetPageRequest(from, size);
 
@@ -114,12 +111,8 @@ public class CommentServiceImpl implements CommentService {
         Comment comment = checkAndGetComment(commentId);
         long countLikes = commentLikeRepository.countByCommentId(comment.getId());
 
-        return CommentMapper.toCommentDto(
-                comment,
-                toShort(adminClient.getUser(comment.getAuthorId())),
-                toShort(getEvent(comment.getEventId())),
-                countLikes
-        );
+        return CommentMapper.toCommentDto(comment, CommentMapper.toShort(adminClient.getUser(comment.getAuthorId())),
+                EventMapper.toEventShortDto(getEvent(comment.getEventId())), countLikes);
     }
 
     @Override
@@ -159,19 +152,14 @@ public class CommentServiceImpl implements CommentService {
 
         long likesCount = commentLikeRepository.countByCommentId(commentId);
 
-        return CommentMapper.toCommentDto(
-                comment,
-                toShort(adminClient.getUser(comment.getAuthorId())),
-                toShort(getEvent(comment.getEventId())),
-                likesCount
-        );
+        return CommentMapper.toCommentDto(comment, CommentMapper.toShort(adminClient.getUser(comment.getAuthorId())),
+                EventMapper.toEventShortDto(getEvent(comment.getEventId())), likesCount);
     }
 
     @Override
     public void deleteLike(Long userId, Long commentId) {
-        CommentLike like = commentLikeRepository
-                .findByUserIdAndCommentId(userId, commentId)
-                .orElseThrow(() -> new NotFoundException("Like not found"));
+        CommentLike like = commentLikeRepository.findByUserIdAndCommentId(userId, commentId).orElseThrow(() ->
+                new NotFoundException("Like not found"));
 
         commentLikeRepository.delete(like);
     }
@@ -189,47 +177,37 @@ public class CommentServiceImpl implements CommentService {
         List<Long> ids = comments.stream().map(Comment::getId).toList();
         Map<Long, Long> likesMap = commentLikeRepository.countLikesForComments(ids).stream()
                 .collect(Collectors.toMap(r -> (Long) r[0], r -> (Long) r[1]));
-        Map<Long, UserShortDto> authors = fixedAuthor != null ? Map.of() : adminClient.getUsers(
-                comments.stream().map(Comment::getAuthorId).distinct().toList()).stream()
-                                                                           .map(this::toShort)
-                                                                           .collect(Collectors.toMap(UserShortDto::getId, Function.identity()));
-        Map<Long, EventShortDto> events = fixedEvent != null ? Map.of() : eventRepository.findAllById(comments.stream().map(Comment::getEventId).distinct().toList()).stream()
-                                                                          .map(EventMapper::toEventShortDto)
-                                                                          .collect(Collectors.toMap(EventShortDto::getId, Function.identity()));
+        Map<Long, UserShortDto> authors =
+                fixedAuthor != null ? Map.of() : adminClient.getUsers(comments
+                                                                      .stream()
+                                                                      .map(Comment::getAuthorId)
+                                                                      .distinct()
+                                                                      .toList())
+                                                 .stream()
+                                                 .map(CommentMapper::toShort)
+                                                 .collect(Collectors.toMap(UserShortDto::getId, Function.identity()));
+        Map<Long, EventShortDto> events =
+                fixedEvent != null ? Map.of() : eventRepository.findAllById(comments
+                                                                            .stream()
+                                                                            .map(Comment::getEventId)
+                                                                            .distinct()
+                                                                            .toList())
+                                                .stream()
+                                                .map(EventMapper::toEventShortDto)
+                                                .collect(Collectors.toMap(EventShortDto::getId, Function.identity()));
 
         return comments.stream()
-                .map(c -> CommentMapper.toCommentDto(
-                        c,
-                        fixedAuthor != null ? fixedAuthor : authors.get(c.getAuthorId()),
-                        fixedEvent != null ? fixedEvent : events.get(c.getEventId()),
-                        likesMap.getOrDefault(c.getId(), 0L)))
+                .map(c ->
+                        CommentMapper.toCommentDto(c, fixedAuthor != null ? fixedAuthor : authors.get(c.getAuthorId()),
+                                fixedEvent != null ? fixedEvent : events.get(c.getEventId()),
+                                likesMap.getOrDefault(c.getId(),
+                                        0L)))
                 .toList();
     }
 
     private EventFullDto getEvent(Long eventId) {
         return eventRepository.findById(eventId)
-                .map(EventMapper::toEventFullDto)
-                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
-    }
-
-    private UserShortDto toShort(UserDto user) {
-        UserShortDto dto = new UserShortDto();
-        dto.setId(user.getId());
-        dto.setName(user.getName());
-        return dto;
-    }
-
-    private EventShortDto toShort(EventFullDto event) {
-        return EventShortDto.builder()
-                .id(event.getId())
-                .title(event.getTitle())
-                .annotation(event.getAnnotation())
-                .category(event.getCategory())
-                .paid(event.getPaid())
-                .eventDate(event.getEventDate())
-                .confirmedRequests(event.getConfirmedRequests())
-                .views(event.getViews())
-                .initiator(event.getInitiator())
-                .build();
+                .map(EventMapper::toEventFullDto).orElseThrow(() ->
+                        new NotFoundException("Event with id=" + eventId + " was not found"));
     }
 }

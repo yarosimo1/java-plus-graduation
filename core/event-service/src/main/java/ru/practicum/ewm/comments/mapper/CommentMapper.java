@@ -2,10 +2,11 @@ package ru.practicum.ewm.comments.mapper;
 
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import ru.practicum.ewm.comments.model.Comment;
 import ru.practicum.ewm.comments.dto.CommentDto;
 import ru.practicum.ewm.comments.dto.NewCommentDto;
+import ru.practicum.ewm.comments.model.Comment;
 import ru.practicum.ewm.events.dto.EventShortDto;
+import ru.practicum.ewm.user.dto.UserDto;
 import ru.practicum.ewm.user.dto.UserShortDto;
 
 import java.time.LocalDateTime;
@@ -31,5 +32,12 @@ public class CommentMapper {
                 .edited(comment.getEdited())
                 .likesCount(likesCount)
                 .build();
+    }
+
+    public UserShortDto toShort(UserDto user) {
+        UserShortDto dto = new UserShortDto();
+        dto.setId(user.getId());
+        dto.setName(user.getName());
+        return dto;
     }
 }

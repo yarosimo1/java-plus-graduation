@@ -5,12 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.error.BadRequestException;
-import ru.practicum.ewm.events.dto.EventFullDto;
-import ru.practicum.ewm.events.model.EventState;
-import ru.practicum.ewm.request.model.StatusRequest;
 import ru.practicum.ewm.error.ConflictException;
 import ru.practicum.ewm.error.NotFoundException;
+import ru.practicum.ewm.events.dto.EventFullDto;
+import ru.practicum.ewm.events.model.EventState;
 import ru.practicum.ewm.request.dto.RequestDto;
+import ru.practicum.ewm.request.model.StatusRequest;
 import ru.practicum.request.client.AdminClient;
 import ru.practicum.request.client.EventsClient;
 import ru.practicum.request.mapper.RequestMapper;
@@ -43,7 +43,7 @@ public class RequestServiceImpl implements RequestService {
         adminClient.getUser(userId);
         EventFullDto event = eventsClient.getEvent(eventId);
 
-        if (event.getInitiator() != null && event.getInitiator().getId().equals(userId)){
+        if (event.getInitiator() != null && event.getInitiator().getId().equals(userId)) {
             throw new ConflictException("Initiator cannot request participation in own event");
         }
 

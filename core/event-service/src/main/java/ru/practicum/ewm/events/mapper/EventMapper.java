@@ -38,6 +38,20 @@ public class EventMapper {
         return dto;
     }
 
+    public EventShortDto toEventShortDto(EventFullDto event) {
+        return EventShortDto.builder()
+                .id(event.getId())
+                .title(event.getTitle())
+                .annotation(event.getAnnotation())
+                .category(event.getCategory())
+                .paid(event.getPaid())
+                .eventDate(event.getEventDate())
+                .confirmedRequests(event.getConfirmedRequests())
+                .views(event.getViews())
+                .initiator(event.getInitiator())
+                .build();
+    }
+
     public static EventFullDto toEventFullDto(Event event) {
         EventFullDto dto = new EventFullDto();
         dto.setId(event.getId());
