@@ -83,7 +83,10 @@ public class EventPublicServiceImpl implements EventPublicService {
         if (event.getState() != EventState.PUBLISHED) {
             throw new NotFoundException("Event with id=" + eventId + " was not found");
         }
-        collectorClient.collect(userId, eventId, ActionType.VIEW);
+
+        if (userId != null) {
+            collectSafely(userId, eventId, ActionType.VIEW);
+        }
 
         double rating = getRatings(List.of(eventId))
                 .getOrDefault(eventId, getStoredRating(event));
@@ -166,6 +169,21 @@ public class EventPublicServiceImpl implements EventPublicService {
         } catch (Exception e) {
             log.warn("Failed to fetch ratings for eventIds={}: {}", eventIds, e.getMessage(), e);
             return Map.of();
+        }
+    }
+
+    private void collectSafely(long userId, long eventId, ActionType actionType) {
+        try {
+            collectorClient.collect(userId, eventId, actionType);
+        } catch (Exception e) {
+            log.warn(
+                    "Failed to send {} action to collector for userId={}, eventId={}: {}",
+                    actionType,
+                    userId,
+                    eventId,
+                    e.getMessage(),
+                    e
+            );
         }
     }
 }
