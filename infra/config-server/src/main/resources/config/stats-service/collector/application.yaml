@@ -9,9 +9,14 @@ spring:
 server:
   port: 0
 
+eureka:
+  instance:
+    metadata-map:
+      grpcPort: ${COLLECTOR_GRPC_PORT:59091}
+
 grpc:
   server:
-    port: 0
+    port: ${COLLECTOR_GRPC_PORT:59091}
 
 management:
   endpoints:

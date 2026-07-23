@@ -4,14 +4,16 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.Import;
+import ru.practicum.client.CollectorClient;
 
 @EnableFeignClients(basePackages = "ru.practicum.request.client")
 @EnableDiscoveryClient
+@Import(CollectorClient.class)
 @SpringBootApplication(scanBasePackages = {
         "ru.practicum.request",
         "ru.practicum.ewm.error",
-        "ru.practicum.ewm.common",
-        "ru.practicum.client"
+        "ru.practicum.ewm.common"
 })
 public class RequestServiceApplication {
     public static void main(String[] args) {
