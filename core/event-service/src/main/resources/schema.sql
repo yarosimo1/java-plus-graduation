@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS events (
     lat REAL,
     lon REAL,
     confirmed_requests INTEGER NOT NULL DEFAULT 0,
-    views BIGINT NOT NULL DEFAULT 0,
+    rating DOUBLE PRECISION NOT NULL DEFAULT 0,
     CONSTRAINT chk_events_state CHECK (state IN ('PENDING', 'PUBLISHED', 'CANCELED'))
 );
 

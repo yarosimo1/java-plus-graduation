@@ -70,7 +70,7 @@ public class EventPrivateServiceImpl implements EventPrivateService {
         event.setState(EventState.PENDING);
         event.setCreatedOn(LocalDateTime.now());
         event.setConfirmedRequests(0);
-        event.setViews(0L);
+        event.setRating(0.0);
         if (newEventDto.getLocation() != null) {
             Location loc = new Location();
             loc.setLat(newEventDto.getLocation().getLat());

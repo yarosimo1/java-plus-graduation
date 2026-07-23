@@ -29,6 +29,7 @@ public class RequestServiceImpl implements RequestService {
     private final RequestRepository requestRepository;
     private final AdminClient adminClient;
     private final EventsClient eventsClient;
+    private final ru.practicum.client.CollectorClient collectorClient;
 
     @Override
     @Transactional
@@ -81,6 +82,8 @@ public class RequestServiceImpl implements RequestService {
         if (statusRequest == StatusRequest.CONFIRMED) {
             eventsClient.updateConfirmedRequests(eventId, event.getConfirmedRequests() + 1);
         }
+
+        collectorClient.collect(userId, eventId, ru.practicum.client.ActionType.REGISTER);
 
         return result;
     }

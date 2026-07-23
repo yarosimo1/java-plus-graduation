@@ -13,5 +13,9 @@ public interface EventPublicService {
                                         LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable,
                                         EventSort sort, int from, int size, HttpServletRequest httpRequest);
 
-    EventFullDto getPublicEventById(Long eventId, HttpServletRequest httpRequest);
+    EventFullDto getPublicEventById(Long eventId, Long userId, HttpServletRequest httpRequest);
+
+    List<EventShortDto> getRecommendations(long userId, int maxResults);
+
+    void likeEvent(long eventId, long userId);
 }
