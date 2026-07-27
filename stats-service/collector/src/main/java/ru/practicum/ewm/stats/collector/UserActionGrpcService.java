@@ -26,7 +26,7 @@ public class UserActionGrpcService extends UserActionControllerGrpc.UserActionCo
     @Override
     public void collectUserAction(UserActionProto request, StreamObserver<Empty> responseObserver) {
         UserActionAvro userAction = toAvro(request);
-        kafkaTemplate.send(USER_ACTIONS_TOPIC, request.getEventId(), toBytes(userAction));
+        kafkaTemplate.send(USER_ACTIONS_TOPIC, null, toBytes(userAction));
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
