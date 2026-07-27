@@ -22,3 +22,9 @@ eureka:
 grpc:
   server:
     port: ${ANALYZER_GRPC_PORT:59092}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
