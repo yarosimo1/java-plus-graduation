@@ -21,12 +21,12 @@ import java.time.Instant;
 public class UserActionGrpcService extends UserActionControllerGrpc.UserActionControllerImplBase {
     private static final String USER_ACTIONS_TOPIC = "stats.user-actions.v1";
 
-    private final KafkaTemplate<String, byte[]> kafkaTemplate;
+    private final KafkaTemplate<Long, byte[]> kafkaTemplate;
 
     @Override
     public void collectUserAction(UserActionProto request, StreamObserver<Empty> responseObserver) {
         UserActionAvro userAction = toAvro(request);
-        kafkaTemplate.send(USER_ACTIONS_TOPIC, String.valueOf(request.getEventId()), toBytes(userAction));
+        kafkaTemplate.send(USER_ACTIONS_TOPIC, request.getEventId(), toBytes(userAction));
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
