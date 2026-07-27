@@ -22,3 +22,9 @@ eureka:
 grpc:
   server:
     port: ${COLLECTOR_GRPC_PORT:59091}
+
+management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info
