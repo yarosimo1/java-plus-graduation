@@ -60,9 +60,6 @@ public class UserActionListener {
             }
 
             double delta = Math.min(newWeight, otherWeight) - Math.min(previousWeight, otherWeight);
-            if (delta <= 0.0) {
-                continue;
-            }
 
             updateSimilarity(action, otherEventId, delta);
         }
