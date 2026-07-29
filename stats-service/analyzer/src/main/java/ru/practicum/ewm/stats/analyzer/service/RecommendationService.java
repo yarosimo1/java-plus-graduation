@@ -1,6 +1,7 @@
 package ru.practicum.ewm.stats.analyzer.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.stats.analyzer.model.EventSimilarity;
 import ru.practicum.ewm.stats.analyzer.model.UserInteraction;
@@ -20,12 +21,13 @@ public class RecommendationService {
     private final EventSimilarityRepository similarityRepository;
 
     public List<Map.Entry<Long, Double>> getSimilarEvents(long eventId, long userId, int maxResults) {
-        Set<Long> interactedEventIds = interactionRepository.findEventIdsByUserId(userId);
+        if (maxResults <= 0) {
+            return List.of();
+        }
 
-        return similarityRepository.findForEvent(eventId).stream()
-                .map(similarity -> Map.entry(getOtherEventId(similarity, eventId), similarity.getScore()))
-                .filter(candidate -> !interactedEventIds.contains(candidate.getKey()))
-                .limit(maxResults)
+        return similarityRepository.findSimilarCandidates(eventId, userId, PageRequest.of(0, maxResults))
+                .stream()
+                .map(row -> Map.entry(row.getEventId(), row.getScore()))
                 .toList();
     }
 
@@ -54,7 +56,11 @@ public class RecommendationService {
     }
 
     public List<Map.Entry<Long, Double>> getInteractionCounts(List<Long> eventIds) {
-        Map<Long, Double> scoresByEvent = interactionRepository.sumWeights(eventIds).stream()
+        if (eventIds.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, Double> scoresByEvent = interactionRepository.sumWeights(eventIds, PageRequest.of(0, eventIds.size())).stream()
                 .collect(Collectors.toMap(
                         UserInteractionRepository.ScoreRow::getEventId,
                         UserInteractionRepository.ScoreRow::getScore
@@ -63,10 +69,6 @@ public class RecommendationService {
         return eventIds.stream()
                 .map(eventId -> Map.entry(eventId, scoresByEvent.getOrDefault(eventId, 0.0)))
                 .toList();
-    }
-
-    private long getOtherEventId(EventSimilarity similarity, long eventId) {
-        return similarity.getEventA().equals(eventId) ? similarity.getEventB() : similarity.getEventA();
     }
 
     private long getCandidateEventId(EventSimilarity similarity, Set<Long> interactedEventIds) {

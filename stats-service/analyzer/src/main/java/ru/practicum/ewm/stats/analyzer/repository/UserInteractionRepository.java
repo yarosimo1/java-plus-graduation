@@ -1,5 +1,6 @@
 package ru.practicum.ewm.stats.analyzer.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,7 +23,7 @@ public interface UserInteractionRepository extends JpaRepository<UserInteraction
             where interaction.eventId in :eventIds
             group by interaction.eventId
             """)
-    List<ScoreRow> sumWeights(@Param("eventIds") Collection<Long> eventIds);
+    List<ScoreRow> sumWeights(@Param("eventIds") Collection<Long> eventIds, Pageable pageable);
 
     interface ScoreRow {
         Long getEventId();
