@@ -6,10 +6,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.events.model.EventSort;
-import ru.practicum.ewm.events.service.EventPublicService;
 import ru.practicum.ewm.events.dto.EventFullDto;
 import ru.practicum.ewm.events.dto.EventShortDto;
+import ru.practicum.ewm.events.model.EventSort;
+import ru.practicum.ewm.events.service.EventPublicService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,11 +34,39 @@ public class EventPublicController {
             @RequestParam(defaultValue = "0") int from,
             @RequestParam(defaultValue = "10") @Min(1) int size,
             HttpServletRequest request) {
-        return eventService.getPublicEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size, request);
+        return eventService.getPublicEvents(
+                text,
+                categories,
+                paid,
+                rangeStart,
+                rangeEnd,
+                onlyAvailable,
+                sort,
+                from,
+                size,
+                request
+        );
     }
 
     @GetMapping("/{id}")
-    public EventFullDto getPublicEventById(@PathVariable Long id, HttpServletRequest request) {
-        return eventService.getPublicEventById(id, request);
+    public EventFullDto getPublicEventById(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-EWM-USER-ID", required = false) Long userId,
+            HttpServletRequest request) {
+        return eventService.getPublicEventById(id, userId, request);
+    }
+
+    @GetMapping("/recommendations")
+    public List<EventShortDto> getRecommendations(
+            @RequestHeader("X-EWM-USER-ID") long userId,
+            @RequestParam(defaultValue = "10") @Min(1) int maxResults) {
+        return eventService.getRecommendations(userId, maxResults);
+    }
+
+    @PutMapping("/{eventId}/like")
+    public void likeEvent(
+            @PathVariable long eventId,
+            @RequestHeader("X-EWM-USER-ID") long userId) {
+        eventService.likeEvent(eventId, userId);
     }
 }

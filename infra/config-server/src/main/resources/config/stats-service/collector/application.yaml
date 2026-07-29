@@ -1,0 +1,25 @@
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+      acks: all
+
+server:
+  port: 0
+
+eureka:
+  instance:
+    metadata-map:
+      grpcPort: ${COLLECTOR_GRPC_PORT:59091}
+
+grpc:
+  server:
+    port: ${COLLECTOR_GRPC_PORT:59091}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

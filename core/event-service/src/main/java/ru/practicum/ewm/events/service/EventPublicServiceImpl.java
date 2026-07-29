@@ -9,9 +9,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.dto.EndpointHitDto;
-import ru.practicum.dto.ViewStatsDto;
-import ru.practicum.ewm.client.StatsClient;
+import ru.practicum.client.ActionType;
+import ru.practicum.client.AnalyzerClient;
+import ru.practicum.client.CollectorClient;
 import ru.practicum.ewm.error.BadRequestException;
 import ru.practicum.ewm.error.NotFoundException;
 import ru.practicum.ewm.events.dto.EventFullDto;
@@ -22,14 +22,12 @@ import ru.practicum.ewm.events.model.EventSort;
 import ru.practicum.ewm.events.model.EventState;
 import ru.practicum.ewm.events.repository.EventRepository;
 import ru.practicum.ewm.events.repository.EventSpecification;
+import ru.practicum.ewm.stats.proto.RecommendedEventProto;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -38,50 +36,39 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class EventPublicServiceImpl implements EventPublicService {
     private final EventRepository eventRepository;
-    private final StatsClient statsClient;
-    private final ConcurrentMap<Long, Set<String>> localUniqueViews = new ConcurrentHashMap<>();
+    private final CollectorClient collectorClient;
+    private final AnalyzerClient analyzerClient;
 
     @Override
     public List<EventShortDto> getPublicEvents(String text, List<Long> categories, Boolean paid,
                                                LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable,
                                                EventSort sort, int from, int size, HttpServletRequest httpRequest) {
-        int page = from / size;
-
-        Pageable pageable = (sort == EventSort.EVENT_DATE)
-                ? PageRequest.of(page, size, Sort.by("eventDate").ascending())
-                : PageRequest.of(page, size);
 
         if (rangeStart != null && rangeEnd != null && rangeEnd.isBefore(rangeStart)) {
             throw new BadRequestException("rangeEnd must not be before rangeStart");
         }
 
+        Pageable pageable = buildPageable(sort, from, size);
         LocalDateTime effectiveStart = rangeStart != null ? rangeStart : LocalDateTime.now();
 
-        Specification<Event> spec = Specification
-                .where(EventSpecification.hasState(EventState.PUBLISHED))
-                .and(EventSpecification.hasText(text))
-                .and(EventSpecification.hasCategories(categories))
-                .and(EventSpecification.hasPaid(paid))
-                .and(EventSpecification.eventDateAfter(effectiveStart))
-                .and(EventSpecification.eventDateBefore(rangeEnd))
-                .and(EventSpecification.isAvailable(onlyAvailable));
+        Specification<Event> specification = buildPublicEventsSpecification(
+                text,
+                categories,
+                paid,
+                effectiveStart,
+                rangeEnd,
+                onlyAvailable
+        );
 
-        List<Event> events = eventRepository.findAll(spec, pageable).getContent();
-
-        saveHit(httpRequest, getClientIp(httpRequest));
-
-        Map<Long, Long> viewsMap = getViewsMap(events);
+        List<Event> events = eventRepository.findAll(specification, pageable).getContent();
+        Map<Long, Double> ratings = getRatings(events.stream().map(Event::getId).toList());
 
         List<EventShortDto> result = events.stream()
-                .map(e -> {
-                    EventShortDto dto = EventMapper.toEventShortDto(e);
-                    dto.setViews(viewsMap.getOrDefault(e.getId(), e.getViews() == null ? 0L : e.getViews()));
-                    return dto;
-                })
+                .map(event -> toShortDtoWithRating(event, ratings))
                 .collect(Collectors.toList());
 
         if (sort == EventSort.VIEWS) {
-            result.sort(Comparator.comparingLong(EventShortDto::getViews).reversed());
+            result.sort(Comparator.comparingDouble(EventShortDto::getRating).reversed());
         }
 
         return result;
@@ -89,7 +76,7 @@ public class EventPublicServiceImpl implements EventPublicService {
 
     @Override
     @Transactional
-    public EventFullDto getPublicEventById(Long eventId, HttpServletRequest httpRequest) {
+    public EventFullDto getPublicEventById(Long eventId, Long userId, HttpServletRequest httpRequest) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
 
@@ -97,89 +84,106 @@ public class EventPublicServiceImpl implements EventPublicService {
             throw new NotFoundException("Event with id=" + eventId + " was not found");
         }
 
-        String clientIp = getClientIp(httpRequest);
-        saveHit(httpRequest, clientIp);
-
-        long views = registerLocalUniqueView(event, clientIp);
-
-        try {
-            List<ViewStatsDto> stats = statsClient.getStats(
-                    LocalDateTime.now().minusYears(100),
-                    LocalDateTime.now().plusDays(3),
-                    List.of("/events/" + eventId),
-                    true);
-
-            if (!stats.isEmpty()) {
-                views = Math.max(views, stats.getFirst().getHits());
-                event.setViews(views);
-            }
-        } catch (Exception e) {
-            log.warn("Failed to fetch view stats for event id={}: {}", eventId, e.getMessage(), e);
+        if (userId != null) {
+            collectSafely(userId, eventId, ActionType.VIEW);
         }
 
+        double rating = getRatings(List.of(eventId))
+                .getOrDefault(eventId, getStoredRating(event));
+        event.setRating(rating);
         eventRepository.save(event);
 
         EventFullDto dto = EventMapper.toEventFullDto(event);
-        dto.setViews(views);
+        dto.setRating(rating);
         return dto;
     }
 
-    private long registerLocalUniqueView(Event event, String clientIp) {
-        Set<String> eventIps = localUniqueViews.computeIfAbsent(event.getId(), id -> ConcurrentHashMap.newKeySet());
-        eventIps.add(clientIp);
-        long views = eventIps.size();
-        event.setViews(views);
-        return views;
+    @Override
+    public List<EventShortDto> getRecommendations(long userId, int maxResults) {
+        List<Long> eventIds = analyzerClient.getRecommendationsForUser(userId, maxResults)
+                .map(RecommendedEventProto::getEventId)
+                .toList();
+
+        return eventRepository.findAllById(eventIds).stream()
+                .map(EventMapper::toEventShortDto)
+                .toList();
     }
 
+    @Override
+    public void likeEvent(long eventId, long userId) {
+        boolean eventHasInteractions = analyzerClient.getInteractionsCount(List.of(eventId))
+                .findFirst()
+                .map(RecommendedEventProto::getScore)
+                .orElse(0.0) > 0.0;
 
-    private void saveHit(HttpServletRequest request, String clientIp) {
+        if (!eventHasInteractions) {
+            throw new BadRequestException("Only visited events can be liked");
+        }
+
+        collectorClient.collect(userId, eventId, ActionType.LIKE);
+    }
+
+    private Pageable buildPageable(EventSort sort, int from, int size) {
+        int page = from / size;
+
+        if (sort == EventSort.EVENT_DATE) {
+            return PageRequest.of(page, size, Sort.by("eventDate").ascending());
+        }
+
+        return PageRequest.of(page, size);
+    }
+
+    private Specification<Event> buildPublicEventsSpecification(String text, List<Long> categories, Boolean paid,
+                                                                LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                                                Boolean onlyAvailable) {
+        return Specification
+                .where(EventSpecification.hasState(EventState.PUBLISHED))
+                .and(EventSpecification.hasText(text))
+                .and(EventSpecification.hasCategories(categories))
+                .and(EventSpecification.hasPaid(paid))
+                .and(EventSpecification.eventDateAfter(rangeStart))
+                .and(EventSpecification.eventDateBefore(rangeEnd))
+                .and(EventSpecification.isAvailable(onlyAvailable));
+    }
+
+    private EventShortDto toShortDtoWithRating(Event event, Map<Long, Double> ratings) {
+        EventShortDto dto = EventMapper.toEventShortDto(event);
+        dto.setRating(ratings.getOrDefault(event.getId(), getStoredRating(event)));
+        return dto;
+    }
+
+    private double getStoredRating(Event event) {
+        return event.getRating() == null ? 0.0 : event.getRating();
+    }
+
+    private Map<Long, Double> getRatings(List<Long> eventIds) {
+        if (eventIds.isEmpty()) {
+            return Map.of();
+        }
         try {
-            statsClient.saveHit(new EndpointHitDto(
-                    null,
-                    "ewm-main-service",
-                    request.getRequestURI(),
-                    clientIp,
-                    LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-            ));
-        } catch (Exception e) {
-            log.warn("Failed to save hit for uri={} ip={}: {}", request.getRequestURI(), getClientIp(request),
-                    e.getMessage(), e);
-        }
-    }
-
-    private String getClientIp(HttpServletRequest request) {
-        String forwardedFor = request.getHeader("X-Forwarded-For");
-        if (forwardedFor != null && !forwardedFor.isBlank()) {
-            return forwardedFor.split(",")[0].trim();
-        }
-        String realIp = request.getHeader("X-Real-IP");
-        if (realIp != null && !realIp.isBlank()) {
-            return realIp.trim();
-        }
-        return request.getRemoteAddr();
-    }
-
-    private Map<Long, Long> getViewsMap(List<Event> events) {
-        if (events.isEmpty()) return Map.of();
-        try {
-            List<String> uris = events.stream()
-                    .map(e -> "/events/" + e.getId())
-                    .toList();
-            List<ViewStatsDto> stats = statsClient.getStats(
-                    LocalDateTime.now().minusMonths(2),
-                    LocalDateTime.now().plusMonths(2),
-                    uris,
-                    true
-            );
-            return stats.stream()
+            return analyzerClient.getInteractionsCount(eventIds)
                     .collect(Collectors.toMap(
-                            s -> Long.parseLong(s.getUri().replace("/events/", "")),
-                            ViewStatsDto::getHits
+                            RecommendedEventProto::getEventId,
+                            RecommendedEventProto::getScore
                     ));
         } catch (Exception e) {
-            log.warn("Failed to fetch view stats for {} uris: {}", events.size(), e.getMessage(), e);
+            log.warn("Failed to fetch ratings for eventIds={}: {}", eventIds, e.getMessage(), e);
             return Map.of();
+        }
+    }
+
+    private void collectSafely(long userId, long eventId, ActionType actionType) {
+        try {
+            collectorClient.collect(userId, eventId, actionType);
+        } catch (Exception e) {
+            log.warn(
+                    "Failed to send {} action to collector for userId={}, eventId={}: {}",
+                    actionType,
+                    userId,
+                    eventId,
+                    e.getMessage(),
+                    e
+            );
         }
     }
 }

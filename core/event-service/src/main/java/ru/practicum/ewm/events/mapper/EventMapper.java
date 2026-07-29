@@ -28,7 +28,7 @@ public class EventMapper {
         dto.setPaid(event.getPaid());
         dto.setEventDate(event.getEventDate());
         dto.setConfirmedRequests(event.getConfirmedRequests());
-        dto.setViews(event.getViews());
+        dto.setRating(event.getRating());
         if (event.getInitiatorId() != null) {
             UserShortDto initiator = new UserShortDto();
             initiator.setId(event.getInitiatorId());
@@ -47,7 +47,7 @@ public class EventMapper {
                 .paid(event.getPaid())
                 .eventDate(event.getEventDate())
                 .confirmedRequests(event.getConfirmedRequests())
-                .views(event.getViews())
+                .rating(event.getRating())
                 .initiator(event.getInitiator())
                 .build();
     }
@@ -72,7 +72,7 @@ public class EventMapper {
         dto.setPublishedOn(event.getPublishedOn());
         dto.setState(event.getState());
         dto.setConfirmedRequests(event.getConfirmedRequests());
-        dto.setViews(event.getViews());
+        dto.setRating(event.getRating());
         if (event.getInitiatorId() != null) {
             UserShortDto initiator = new UserShortDto();
             initiator.setId(event.getInitiatorId());

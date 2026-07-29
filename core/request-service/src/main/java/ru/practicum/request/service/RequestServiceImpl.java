@@ -29,6 +29,7 @@ public class RequestServiceImpl implements RequestService {
     private final RequestRepository requestRepository;
     private final AdminClient adminClient;
     private final EventsClient eventsClient;
+    private final ru.practicum.client.CollectorClient collectorClient;
 
     @Override
     @Transactional
@@ -82,6 +83,8 @@ public class RequestServiceImpl implements RequestService {
             eventsClient.updateConfirmedRequests(eventId, event.getConfirmedRequests() + 1);
         }
 
+        collectSafely(userId, eventId, ru.practicum.client.ActionType.REGISTER);
+
         return result;
     }
 
@@ -115,5 +118,20 @@ public class RequestServiceImpl implements RequestService {
         return requestRepository.findAllByRequesterId(requesterId).stream()
                 .map(RequestMapper::toRequestDto)
                 .toList();
+    }
+
+    private void collectSafely(long userId, long eventId, ru.practicum.client.ActionType actionType) {
+        try {
+            collectorClient.collect(userId, eventId, actionType);
+        } catch (Exception e) {
+            log.warn(
+                    "Failed to send {} action to collector for userId={}, eventId={}: {}",
+                    actionType,
+                    userId,
+                    eventId,
+                    e.getMessage(),
+                    e
+            );
+        }
     }
 }

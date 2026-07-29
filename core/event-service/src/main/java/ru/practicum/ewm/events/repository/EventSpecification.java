@@ -10,31 +10,38 @@ import java.util.List;
 public class EventSpecification {
 
     public static Specification<Event> hasState(EventState state) {
-        return (root, query, cb) -> state == null ? null : cb.equal(root.get("state"), state);
+        return (root, query, cb) ->
+                state == null ? null : cb.equal(root.get("state"), state);
     }
 
     public static Specification<Event> hasStates(List<EventState> states) {
-        return (root, query, cb) -> (states == null || states.isEmpty()) ? null : root.get("state").in(states);
+        return (root, query, cb) ->
+                (states == null || states.isEmpty()) ? null : root.get("state").in(states);
     }
 
     public static Specification<Event> hasUsers(List<Long> users) {
-        return (root, query, cb) -> (users == null || users.isEmpty()) ? null : root.get("initiatorId").in(users);
+        List<Long> userIds = onlyPositiveIds(users);
+        return (root, query, cb) -> userIds.isEmpty() ? null : root.get("initiatorId").in(userIds);
     }
 
     public static Specification<Event> hasCategories(List<Long> categories) {
-        return (root, query, cb) -> (categories == null || categories.isEmpty()) ? null : root.get("categoryId").in(categories);
+        List<Long> categoryIds = onlyPositiveIds(categories);
+        return (root, query, cb) -> categoryIds.isEmpty() ? null : root.get("categoryId").in(categoryIds);
     }
 
     public static Specification<Event> hasPaid(Boolean paid) {
-        return (root, query, cb) -> paid == null ? null : cb.equal(root.get("paid"), paid);
+        return (root, query, cb) ->
+                paid == null ? null : cb.equal(root.get("paid"), paid);
     }
 
     public static Specification<Event> eventDateAfter(LocalDateTime start) {
-        return (root, query, cb) -> start == null ? null : cb.greaterThanOrEqualTo(root.get("eventDate"), start);
+        return (root, query, cb) ->
+                start == null ? null : cb.greaterThanOrEqualTo(root.get("eventDate"), start);
     }
 
     public static Specification<Event> eventDateBefore(LocalDateTime end) {
-        return (root, query, cb) -> end == null ? null : cb.lessThanOrEqualTo(root.get("eventDate"), end);
+        return (root, query, cb) ->
+                end == null ? null : cb.lessThanOrEqualTo(root.get("eventDate"), end);
     }
 
     public static Specification<Event> hasText(String text) {
@@ -56,5 +63,11 @@ public class EventSpecification {
                     cb.lessThan(root.get("confirmedRequests"), root.get("participantLimit"))
             );
         };
+    }
+
+    private static List<Long> onlyPositiveIds(List<Long> ids) {
+        return ids == null ? List.of() : ids.stream()
+                                         .filter(id -> id != null && id > 0)
+                                         .toList();
     }
 }
